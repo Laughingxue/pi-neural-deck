@@ -93,6 +93,14 @@ NPU 温度探针每 12 s 读取一次，Agent 推理期间自动暂停，避免�
 
 `systemd/` 下仍保留可选的单元文件，需要开机自启用时再手动复制启用（记得改里面的 `User` / `WorkingDirectory`）。
 
+## 测试
+
+```bash
+./test_start.sh
+```
+
+覆盖脚本语法、启动、`/api/health`、`/api/metrics`、`/ws/metrics`、hailo-ollama 自动拉起，以及模拟 `Ctrl+C` 后的进程与端口清理，共 11 项检查。
+
 ## 布局说明
 
 - 宽度 ≥ 901px 且高度 ≥ 880px：左（系统）/ 中（NPU、LLM、曲线、网络、进程）/ 右（Agent）三列完整布局
