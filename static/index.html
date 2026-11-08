@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEURAL DECK // LaughingPi</title>
+<link rel="stylesheet" href="/static/style.css?v=6">
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="scan"></div>
+<div class="vignette"></div>
+
+<header class="head">
+  <div class="brand">
+    <svg class="hex" viewBox="0 0 40 40" aria-hidden="true">
+      <polygon points="20,2 36,11 36,29 20,38 4,29 4,11"></polygon>
+    </svg>
+    <div>
+      <h1>NEURAL DECK</h1>
+      <p>LAUGHINGPI · AI HAT+ 2 · REAL-TIME TELEMETRY</p>
+    </div>
+  </div>
+  <div class="chips">
+    <span class="chip" id="chip-pi"><i></i>PI CORE</span>
+    <span class="chip" id="chip-npu"><i></i>NPU LINK</span>
+    <span class="chip" id="chip-llm"><i></i>LLM ENGINE</span>
+  </div>
+  <div class="clock">
+    <div id="clock-time">--:--:--</div>
+    <div id="clock-date">----</div>
+  </div>
+</header>
+
+<main class="grid">
+  <!-- 左列：系统核心 -->
+  <section class="col col-left">
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>CPU CORE <b id="cpu-pct">--%</b></div>
+      <div class="panel-body ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-fill" id="cpu-ring" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="ring-label"><span id="cpu-big">0</span><em>%</em></div>
+        <div class="cores" id="cores"></div>
+      </div>
+      <div class="panel-foot">
+        <span id="cpu-load">LOAD --</span>
+        <span id="cpu-freq">-- MHz</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>MEMORY <b id="mem-pct">--%</b></div>
+      <div class="panel-body ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-fill" id="mem-ring" cx="60" cy="60" r="52" style="stroke:#2bffb0"></circle>
+        </svg>
+        <div class="ring-label"><span id="mem-big">0</span><em>%</em></div>
+        <div class="sub" style="flex-direction:column;gap:5px">
+          <div>已用 <b id="mem-used">--</b> GB</div>
+          <div>总量 <b id="mem-total">--</b> GB</div>
+          <div>SWAP <b id="mem-swap">--</b>%</div>
+        </div>
+      </div>
+      <div class="panel-foot"><span>MEMORY PRESSURE</span><span id="mem-state">NOMINAL</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>THERMAL <b id="soc-temp">--°C</b></div>
+      <div class="panel-body">
+        <div class="big-value"><span id="soc-big">--</span><em>°C SoC</em></div>
+        <div class="meter" id="temp-meter"><i id="temp-bar"></i></div>
+        <div class="sub">
+          <span>NPU <b id="npu-temp-sm">--</b>°C</span>
+          <span>状态 <b id="temp-state">--</b></span>
+        </div>
+      </div>
+      <div class="panel-foot"><span>ACTIVE COOLING</span><span>THRESHOLD 80°C</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>STORAGE <b id="disk-pct">--%</b></div>
+      <div class="panel-body">
+        <div class="big-value"><span id="disk-big">--</span><em>% / 根分区</em></div>
+        <div class="meter" id="disk-meter"><i id="disk-bar"></i></div>
+        <div class="sub">
+          <span>已用 <b id="disk-used">--</b> GB</span>
+          <span>总计 <b id="disk-total">--</b> GB</span>
+        </div>
+      </div>
+      <div class="panel-foot"><span id="disk-io">R -- / W --</span><span>NVMe/SD</span></div>
+    </div>
+  </section>
+
+  <!-- 中列：NPU / LLM / 网络 / 进程 -->
+  <section class="col col-mid">
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>NEURAL PROCESSOR · HAILO-10H <b id="npu-state">LINK</b></div>
+      <div class="panel-body npu-body">
+        <div class="radar-wrap"><canvas id="radar"></canvas></div>
+        <div class="npu-info">
+          <div class="temp" id="npu-temp-big">--°C</div>
+          <div class="row"><span>架构</span><b id="npu-arch">--</b></div>
+          <div class="row"><span>固件</span><b id="npu-fw">--</b></div>
+          <div class="row"><span>板卡</span><b id="npu-product">--</b></div>
+          <div class="row"><span>算力</span><b>40 TOPS</b></div>
+        </div>
+      </div>
+      <div class="panel-foot"><span>CHIP TELEMETRY</span><span id="npu-hint">SWEEPING</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>LLM ENGINE <b id="llm-state">--</b></div>
+      <div class="panel-body llm-body">
+        <div class="model-chips" id="llm-models"></div>
+        <div class="stat-row">
+          <div class="stat"><u>REQUESTS</u><span id="llm-req">0</span></div>
+          <div class="stat"><u>TOKENS</u><span id="llm-tok">0</span></div>
+          <div class="stat"><u>LAST LATENCY</u><span id="llm-lat">--</span></div>
+        </div>
+      </div>
+      <div class="panel-foot"><span>OLLAMA · :8000</span><span id="llm-count">0 MODELS</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>COMPUTE TRACE <b>CPU / THERMAL</b></div>
+      <div class="panel-body"><canvas id="trace"></canvas></div>
+      <div class="panel-foot"><span style="color:#22e6ff">■ CPU %</span><span style="color:#ff2e88">■ SoC °C</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>NETWORK <b id="net-ip">--</b></div>
+      <div class="panel-body"><canvas id="spark"></canvas></div>
+      <div class="panel-foot"><span id="net-rx">RX --</span><span id="net-tx">TX --</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span class="dot"></span>PROCESS WATCH <b>TOP CPU</b></div>
+      <div class="panel-body">
+        <div class="proc" id="procs">
+          <div class="proc-row head"><span>PID</span><span>PROCESS</span><span class="num">CPU</span><span class="num">MEM</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右列：Agent -->
+  <section class="col col-right">
+    <div class="panel agent">
+      <div class="panel-head"><span class="dot"></span>AGENT · 设备诊断 <b id="agent-state">IDLE</b></div>
+      <div class="panel-body">
+        <div class="agent-log" id="agent-log">
+          <div class="msg log">◤ NEURAL DECK 已上线</div>
+          <div class="msg log">▸ 遥测链路：1 Hz · 本地推理</div>
+          <div class="msg bot">我是这台设备的诊断智能体。问我温度、负载、NPU 或进程状态。</div>
+        </div>
+        <div class="quick">
+          <button data-q="给我做个整机体检">整机体检</button>
+          <button data-q="NPU 现在多热？">NPU 温度</button>
+          <button data-q="哪个进程最吃 CPU？">CPU 占用</button>
+          <button data-q="现在系统有什么风险吗？">风险扫描</button>
+        </div>
+        <div class="ask">
+          <input id="agent-input" type="text" placeholder="输入诊断指令…" autocomplete="off">
+          <button id="agent-send">发送</button>
+        </div>
+      </div>
+      <div class="panel-foot"><span>MODEL <select id="agent-model-select"></select></span><span id="agent-hint">LOCAL · 3B 约 30-40s</span></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>HOST <b id="f-host">LAUGHINGPI</b></span>
+  <span>UPTIME <b id="f-uptime">--</b></span>
+  <span>STATUS <b id="f-status">SYNC</b></span>
+  <span class="right">NEURAL DECK v1.0 · RASPBERRY PI 5 + AI HAT+ 2</span>
+</footer>
+
+<script src="/static/app.js?v=6"></script>
+</body>
+</html>

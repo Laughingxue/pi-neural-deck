@@ -1,0 +1,15 @@
+[Unit]
+Description=Hailo Ollama local LLM server (AI HAT+ 2)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=laughing
+Group=laughing
+ExecStart=/usr/bin/hailo-ollama
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

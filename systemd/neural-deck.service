@@ -1,0 +1,18 @@
+[Unit]
+Description=NEURAL DECK - Raspberry Pi + AI HAT+ 2 telemetry dashboard
+After=network-online.target hailo-ollama.service
+Wants=network-online.target
+Requires=hailo-ollama.service
+
+[Service]
+Type=simple
+User=laughing
+Group=laughing
+WorkingDirectory=/home/laughing/Documents/Trae-CN/default/hailo-hud
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/laughing/Documents/Trae-CN/default/.venv/bin/python app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
