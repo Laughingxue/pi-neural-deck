@@ -52,7 +52,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install fastapi uvicorn psutil httpx websockets
 
-python app.py
+./start.sh            # 或 python app.py
 ```
 
 浏览器打开 `http://<树莓派IP>:8080`。
@@ -83,15 +83,15 @@ python app.py
 
 NPU 温度探针每 12 s 读取一次，Agent 推理期间自动暂停，避免与推理任务抢占 Hailo 设备。
 
-## systemd 开机自启
+## 启动 / 停止
 
-`systemd/` 下提供两个单元文件，**使用前请把 `User` 和 `WorkingDirectory` 改成你自己的**。
+项目自带 `start.sh`：会检查 hailo-ollama 是否在线，未运行则自动后台拉起，然后启动仪表盘；`Ctrl+C` 退出时一并关闭它拉起的 hailo-ollama。
 
 ```bash
-sudo cp systemd/hailo-ollama.service systemd/neural-deck.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now hailo-ollama.service neural-deck.service
+./start.sh
 ```
+
+`systemd/` 下仍保留可选的单元文件，需要开机自启用时再手动复制启用（记得改里面的 `User` / `WorkingDirectory`）。
 
 ## 布局说明
 
